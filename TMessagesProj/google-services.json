@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "842609211172",
+    "project_id": "firebase-maxthon"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842609211172:android:fac94a17eac4c1f0",
+        "android_client_info": {
+          "package_name": "org.telegram.messenger.beta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "842609211172-6guo6t8cqh300mqjs8lr222uur6sp6bu.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "842609211172-iji3vp135nh5mj5e0mdbi00lp6l1jdnd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.telegram.messenger.beta",
+            "certificate_hash": "801bb30b84b8a5dc0e225499fec421e506364884"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZWZsjPLciFRBPbWtG4VyZ7Zt_tTch2hM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
