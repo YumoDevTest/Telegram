@@ -70,7 +70,12 @@
         android:largeHeap="true"
         android:theme="@style/Theme.TMessages.Start"
         android:manageSpaceActivity="org.telegram.ui.ManageSpaceActivity">
-
+        <meta-data
+            android:name="com.qihoo360.plugin.name"
+            android:value="telegram" />
+        <meta-data
+            android:name="com.qihoo360.plugin.version.ver"
+            android:value="3049" />
         <activity
             android:name="org.telegram.ui.LaunchActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"

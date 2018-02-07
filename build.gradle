@@ -8,8 +8,10 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
         classpath 'com.google.gms:google-services:3.1.1'
+        classpath 'com.qihoo360.replugin:replugin-plugin-gradle:2.2.1'
     }
 }
 repositories {
+    jcenter()
     google()
 }

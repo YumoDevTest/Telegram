@@ -1028,6 +1028,7 @@ public class LoginActivity extends BaseFragment {
             }
 
             ConnectionsManager.getInstance().cleanup();
+
             final TLRPC.TL_auth_sendCode req = new TLRPC.TL_auth_sendCode();
             String phone = PhoneFormat.stripExceptNumbers("" + codeField.getText() + phoneField.getText());
             req.api_hash = BuildVars.APP_HASH;

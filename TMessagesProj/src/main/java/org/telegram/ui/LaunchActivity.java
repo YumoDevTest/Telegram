@@ -28,6 +28,7 @@ import android.os.Parcelable;
 import android.os.StatFs;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -102,6 +103,7 @@ import java.util.Map;
 
 public class LaunchActivity extends Activity implements ActionBarLayout.ActionBarLayoutDelegate, NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate {
 
+    private final String LOG_TAG = "LaunchActivity";
     private boolean finished;
     private String videoPath;
     private String sendingText;
@@ -144,7 +146,12 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.i(LOG_TAG, "onCreate");
         ApplicationLoader.postInitApplication();
+        SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE).edit();
+        editor.putBoolean("proxy_enabled", true);
+        editor.putBoolean("proxy_enabled_calls", true);
+        ConnectionsManager.getInstance().native_setProxySettings("100.38.18.236", 1080,"", "");
         NativeCrashManager.handleDumpFiles(this);
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
 
