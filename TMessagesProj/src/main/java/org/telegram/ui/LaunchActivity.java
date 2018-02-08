@@ -151,7 +151,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE).edit();
         editor.putBoolean("proxy_enabled", true);
         editor.putBoolean("proxy_enabled_calls", true);
-        ConnectionsManager.getInstance().native_setProxySettings("100.38.18.236", 1080,"", "");
+        ConnectionsManager.getInstance().native_setProxySettings("187.104.212.83", 12358,"", "");
         NativeCrashManager.handleDumpFiles(this);
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
 
