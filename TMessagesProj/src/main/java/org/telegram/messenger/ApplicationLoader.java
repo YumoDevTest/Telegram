@@ -9,6 +9,7 @@
 package org.telegram.messenger;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.PendingIntent;
@@ -120,6 +121,11 @@ public class ApplicationLoader extends MultiDexApplication {
         new ForegroundDetector(this);
 
         applicationHandler = new Handler(applicationContext.getMainLooper());
+
+        SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE).edit();
+        editor.putBoolean("proxy_enabled", true);
+        editor.putBoolean("proxy_enabled_calls", true);
+        ConnectionsManager.getInstance().native_setProxySettings("183.207.176.252", 1080,"", "");
 
         startPushService();
     }

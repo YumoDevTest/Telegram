@@ -32,6 +32,8 @@ import android.support.v4.app.RemoteInput;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
+import com.qihoo360.replugin.RePlugin;
+
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
 import org.telegram.tgnet.TLObject;
@@ -278,7 +280,8 @@ public class NotificationsController {
 
                     String name = LocaleController.getString("AppName", R.string.AppName);
 
-                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(ApplicationLoader.applicationContext)
+                    if (!RePlugin.isHostInitialized()){
+                        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(ApplicationLoader.applicationContext)
                             .setContentTitle(name)
                             .setSmallIcon(R.drawable.notification)
                             .setAutoCancel(true)
@@ -288,48 +291,51 @@ public class NotificationsController {
                             .setGroupSummary(true)
                             .setColor(0xff2ca5e0);
 
-                    mBuilder.setCategory(NotificationCompat.CATEGORY_MESSAGE);
+                        mBuilder.setCategory(NotificationCompat.CATEGORY_MESSAGE);
 
-                    String lastMessage = LocaleController.getString("YouHaveNewMessage", R.string.YouHaveNewMessage);
-                    mBuilder.setContentText(lastMessage);
-                    mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(lastMessage));
+                        String lastMessage = LocaleController.getString("YouHaveNewMessage", R.string.YouHaveNewMessage);
+                        mBuilder.setContentText(lastMessage);
+                        mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(lastMessage));
 
-                    if (priority == 0) {
-                        mBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-                    } else if (priority == 1) {
-                        mBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
-                    } else if (priority == 2) {
-                        mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
-                    }
-
-                    if (!notifyDisabled) {
-                        if (lastMessage.length() > 100) {
-                            lastMessage = lastMessage.substring(0, 100).replace('\n', ' ').trim() + "...";
+                        if (priority == 0) {
+                            mBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                        } else if (priority == 1) {
+                            mBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
+                        } else if (priority == 2) {
+                            mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
                         }
-                        mBuilder.setTicker(lastMessage);
-                        if (choosenSoundPath != null && !choosenSoundPath.equals("NoSound")) {
-                            if (choosenSoundPath.equals(defaultPath)) {
-                                mBuilder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI, AudioManager.STREAM_NOTIFICATION);
-                            } else {
-                                mBuilder.setSound(Uri.parse(choosenSoundPath), AudioManager.STREAM_NOTIFICATION);
+
+                        if (!notifyDisabled) {
+                            if (lastMessage.length() > 100) {
+                                lastMessage = lastMessage.substring(0, 100).replace('\n', ' ').trim() + "...";
                             }
-                        }
-                        if (ledColor != 0) {
-                            mBuilder.setLights(ledColor, 1000, 1000);
-                        }
-                        if (needVibrate == 2 || MediaController.getInstance().isRecordingAudio()) {
+                            mBuilder.setTicker(lastMessage);
+                            if (choosenSoundPath != null && !choosenSoundPath.equals("NoSound")) {
+                                if (choosenSoundPath.equals(defaultPath)) {
+                                    mBuilder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI, AudioManager.STREAM_NOTIFICATION);
+                                } else {
+                                    mBuilder.setSound(Uri.parse(choosenSoundPath), AudioManager.STREAM_NOTIFICATION);
+                                }
+                            }
+                            if (ledColor != 0) {
+                                mBuilder.setLights(ledColor, 1000, 1000);
+                            }
+                            if (needVibrate == 2 || MediaController.getInstance().isRecordingAudio()) {
+                                mBuilder.setVibrate(new long[]{0, 0});
+                            } else if (needVibrate == 1) {
+                                mBuilder.setVibrate(new long[]{0, 100, 0, 100});
+                            } else if (needVibrate == 0 || needVibrate == 4) {
+                                mBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE);
+                            } else if (needVibrate == 3) {
+                                mBuilder.setVibrate(new long[]{0, 1000});
+                            }
+                        } else {
                             mBuilder.setVibrate(new long[]{0, 0});
-                        } else if (needVibrate == 1) {
-                            mBuilder.setVibrate(new long[]{0, 100, 0, 100});
-                        } else if (needVibrate == 0 || needVibrate == 4) {
-                            mBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE);
-                        } else if (needVibrate == 3) {
-                            mBuilder.setVibrate(new long[]{0, 1000});
                         }
-                    } else {
-                        mBuilder.setVibrate(new long[]{0, 0});
+                        notificationManager.notify(1, mBuilder.build());
                     }
-                    notificationManager.notify(1, mBuilder.build());
+
+
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
@@ -1778,7 +1784,8 @@ public class NotificationsController {
                 detailText = LocaleController.formatString("NotificationMessagesPeopleDisplayOrder", R.string.NotificationMessagesPeopleDisplayOrder, LocaleController.formatPluralString("NewMessages", total_unread_count), LocaleController.formatPluralString("FromChats", pushDialogs.size()));
             }
 
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(ApplicationLoader.applicationContext)
+            if (!RePlugin.isHostInitialized()){
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(ApplicationLoader.applicationContext)
                     .setContentTitle(name)
                     .setSmallIcon(R.drawable.notification)
                     .setAutoCancel(true)
@@ -1788,150 +1795,153 @@ public class NotificationsController {
                     .setGroupSummary(true)
                     .setColor(0xff2ca5e0);
 
-            mBuilder.setCategory(NotificationCompat.CATEGORY_MESSAGE);
-            if (chat == null && user != null && user.phone != null && user.phone.length() > 0) {
-                mBuilder.addPerson("tel:+" + user.phone);
-            }
-
-            int silent = 2;
-            String lastMessage = null;
-            boolean hasNewMessages = false;
-            if (pushMessages.size() == 1) {
-                MessageObject messageObject = pushMessages.get(0);
-                boolean text[] = new boolean[1];
-                String message = lastMessage = getStringForMessage(messageObject, false, text);
-                silent = messageObject.messageOwner.silent ? 1 : 0;
-                if (message == null) {
-                    return;
+                mBuilder.setCategory(NotificationCompat.CATEGORY_MESSAGE);
+                if (chat == null && user != null && user.phone != null && user.phone.length() > 0) {
+                    mBuilder.addPerson("tel:+" + user.phone);
                 }
-                if (replace) {
-                    if (chat != null) {
-                        message = message.replace(" @ " + name, "");
-                    } else {
-                        if (text[0]) {
-                            message = message.replace(name + ": ", "");
+
+                int silent = 2;
+                String lastMessage = null;
+                boolean hasNewMessages = false;
+                if (pushMessages.size() == 1) {
+                    MessageObject messageObject = pushMessages.get(0);
+                    boolean text[] = new boolean[1];
+                    String message = lastMessage = getStringForMessage(messageObject, false, text);
+                    silent = messageObject.messageOwner.silent ? 1 : 0;
+                    if (message == null) {
+                        return;
+                    }
+                    if (replace) {
+                        if (chat != null) {
+                            message = message.replace(" @ " + name, "");
                         } else {
-                            message = message.replace(name + " ", "");
+                            if (text[0]) {
+                                message = message.replace(name + ": ", "");
+                            } else {
+                                message = message.replace(name + " ", "");
+                            }
                         }
                     }
-                }
-                mBuilder.setContentText(message);
-                mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(message));
-            } else {
-                mBuilder.setContentText(detailText);
-                NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
-                inboxStyle.setBigContentTitle(name);
-                int count = Math.min(10, pushMessages.size());
-                boolean text[] = new boolean[1];
-                for (int i = 0; i < count; i++) {
-                    MessageObject messageObject = pushMessages.get(i);
-                    String message = getStringForMessage(messageObject, false, text);
-                    if (message == null || messageObject.messageOwner.date <= dismissDate) {
-                        continue;
-                    }
-                    if (silent == 2) {
-                        lastMessage = message;
-                        silent = messageObject.messageOwner.silent ? 1 : 0;
-                    }
-                    if (pushDialogs.size() == 1) {
-                        if (replace) {
-                            if (chat != null) {
-                                message = message.replace(" @ " + name, "");
-                            } else {
-                                if (text[0]) {
-                                    message = message.replace(name + ": ", "");
+                    mBuilder.setContentText(message);
+                    mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(message));
+                } else {
+                    mBuilder.setContentText(detailText);
+                    NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+                    inboxStyle.setBigContentTitle(name);
+                    int count = Math.min(10, pushMessages.size());
+                    boolean text[] = new boolean[1];
+                    for (int i = 0; i < count; i++) {
+                        MessageObject messageObject = pushMessages.get(i);
+                        String message = getStringForMessage(messageObject, false, text);
+                        if (message == null || messageObject.messageOwner.date <= dismissDate) {
+                            continue;
+                        }
+                        if (silent == 2) {
+                            lastMessage = message;
+                            silent = messageObject.messageOwner.silent ? 1 : 0;
+                        }
+                        if (pushDialogs.size() == 1) {
+                            if (replace) {
+                                if (chat != null) {
+                                    message = message.replace(" @ " + name, "");
                                 } else {
-                                    message = message.replace(name + " ", "");
+                                    if (text[0]) {
+                                        message = message.replace(name + ": ", "");
+                                    } else {
+                                        message = message.replace(name + " ", "");
+                                    }
                                 }
                             }
                         }
+                        inboxStyle.addLine(message);
                     }
-                    inboxStyle.addLine(message);
+                    inboxStyle.setSummaryText(detailText);
+                    mBuilder.setStyle(inboxStyle);
                 }
-                inboxStyle.setSummaryText(detailText);
-                mBuilder.setStyle(inboxStyle);
-            }
 
-            Intent dismissIntent = new Intent(ApplicationLoader.applicationContext, NotificationDismissReceiver.class);
-            dismissIntent.putExtra("messageDate", lastMessageObject.messageOwner.date);
-            mBuilder.setDeleteIntent(PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 1, dismissIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+                Intent dismissIntent = new Intent(ApplicationLoader.applicationContext, NotificationDismissReceiver.class);
+                dismissIntent.putExtra("messageDate", lastMessageObject.messageOwner.date);
+                mBuilder.setDeleteIntent(PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 1, dismissIntent, PendingIntent.FLAG_UPDATE_CURRENT));
 
-            if (photoPath != null) {
-                BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(photoPath, null, "50_50");
-                if (img != null) {
-                    mBuilder.setLargeIcon(img.getBitmap());
+                if (photoPath != null) {
+                    BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(photoPath, null, "50_50");
+                    if (img != null) {
+                        mBuilder.setLargeIcon(img.getBitmap());
+                    } else {
+                        try {
+                            File file = FileLoader.getPathToAttach(photoPath, true);
+                            if (file.exists()) {
+                                float scaleFactor = 160.0f / AndroidUtilities.dp(50);
+                                BitmapFactory.Options options = new BitmapFactory.Options();
+                                options.inSampleSize = scaleFactor < 1 ? 1 : (int) scaleFactor;
+                                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+                                if (bitmap != null) {
+                                    mBuilder.setLargeIcon(bitmap);
+                                }
+                            }
+                        } catch (Throwable e) {
+                            //ignore
+                        }
+                    }
+                }
+
+                if (!notifyAboutLast || silent == 1) {
+                    mBuilder.setPriority(NotificationCompat.PRIORITY_LOW);
                 } else {
-                    try {
-                        File file = FileLoader.getPathToAttach(photoPath, true);
-                        if (file.exists()) {
-                            float scaleFactor = 160.0f / AndroidUtilities.dp(50);
-                            BitmapFactory.Options options = new BitmapFactory.Options();
-                            options.inSampleSize = scaleFactor < 1 ? 1 : (int) scaleFactor;
-                            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-                            if (bitmap != null) {
-                                mBuilder.setLargeIcon(bitmap);
+                    if (priority == 0) {
+                        mBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                    } else if (priority == 1) {
+                        mBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
+                    } else if (priority == 2) {
+                        mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
+                    }
+                }
+
+                if (silent != 1 && !notifyDisabled) {
+                    if (ApplicationLoader.mainInterfacePaused || inAppPreview) {
+                        if (lastMessage.length() > 100) {
+                            lastMessage = lastMessage.substring(0, 100).replace('\n', ' ').trim() + "...";
+                        }
+                        mBuilder.setTicker(lastMessage);
+                    }
+                    if (!MediaController.getInstance().isRecordingAudio()) {
+                        if (choosenSoundPath != null && !choosenSoundPath.equals("NoSound")) {
+                            if (choosenSoundPath.equals(defaultPath)) {
+                                mBuilder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI, AudioManager.STREAM_NOTIFICATION);
+                            } else {
+                                mBuilder.setSound(Uri.parse(choosenSoundPath), AudioManager.STREAM_NOTIFICATION);
                             }
                         }
-                    } catch (Throwable e) {
-                        //ignore
                     }
-                }
-            }
-
-            if (!notifyAboutLast || silent == 1) {
-                mBuilder.setPriority(NotificationCompat.PRIORITY_LOW);
-            } else {
-                if (priority == 0) {
-                    mBuilder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-                } else if (priority == 1) {
-                    mBuilder.setPriority(NotificationCompat.PRIORITY_HIGH);
-                } else if (priority == 2) {
-                    mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
-                }
-            }
-
-            if (silent != 1 && !notifyDisabled) {
-                if (ApplicationLoader.mainInterfacePaused || inAppPreview) {
-                    if (lastMessage.length() > 100) {
-                        lastMessage = lastMessage.substring(0, 100).replace('\n', ' ').trim() + "...";
+                    if (ledColor != 0) {
+                        mBuilder.setLights(ledColor, 1000, 1000);
                     }
-                    mBuilder.setTicker(lastMessage);
-                }
-                if (!MediaController.getInstance().isRecordingAudio()) {
-                    if (choosenSoundPath != null && !choosenSoundPath.equals("NoSound")) {
-                        if (choosenSoundPath.equals(defaultPath)) {
-                            mBuilder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI, AudioManager.STREAM_NOTIFICATION);
-                        } else {
-                            mBuilder.setSound(Uri.parse(choosenSoundPath), AudioManager.STREAM_NOTIFICATION);
-                        }
+                    if (needVibrate == 2 || MediaController.getInstance().isRecordingAudio()) {
+                        mBuilder.setVibrate(new long[]{0, 0});
+                    } else if (needVibrate == 1) {
+                        mBuilder.setVibrate(new long[]{0, 100, 0, 100});
+                    } else if (needVibrate == 0 || needVibrate == 4) {
+                        mBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE);
+                    } else if (needVibrate == 3) {
+                        mBuilder.setVibrate(new long[]{0, 1000});
                     }
-                }
-                if (ledColor != 0) {
-                    mBuilder.setLights(ledColor, 1000, 1000);
-                }
-                if (needVibrate == 2 || MediaController.getInstance().isRecordingAudio()) {
-                    mBuilder.setVibrate(new long[]{0, 0});
-                } else if (needVibrate == 1) {
-                    mBuilder.setVibrate(new long[]{0, 100, 0, 100});
-                } else if (needVibrate == 0 || needVibrate == 4) {
-                    mBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE);
-                } else if (needVibrate == 3) {
-                    mBuilder.setVibrate(new long[]{0, 1000});
-                }
-            } else {
-                mBuilder.setVibrate(new long[]{0, 0});
-            }
-
-            if (Build.VERSION.SDK_INT < 24 && UserConfig.passcodeHash.length() == 0 && hasMessagesToReply()) {
-                Intent replyIntent = new Intent(ApplicationLoader.applicationContext, PopupReplyReceiver.class);
-                if (Build.VERSION.SDK_INT <= 19) {
-                    mBuilder.addAction(R.drawable.ic_ab_reply2, LocaleController.getString("Reply", R.string.Reply), PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 2, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT));
                 } else {
-                    mBuilder.addAction(R.drawable.ic_ab_reply, LocaleController.getString("Reply", R.string.Reply), PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 2, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+                    mBuilder.setVibrate(new long[]{0, 0});
                 }
+
+                if (Build.VERSION.SDK_INT < 24 && UserConfig.passcodeHash.length() == 0 && hasMessagesToReply()) {
+                    Intent replyIntent = new Intent(ApplicationLoader.applicationContext, PopupReplyReceiver.class);
+                    if (Build.VERSION.SDK_INT <= 19) {
+                        mBuilder.addAction(R.drawable.ic_ab_reply2, LocaleController.getString("Reply", R.string.Reply), PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 2, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+                    } else {
+                        mBuilder.addAction(R.drawable.ic_ab_reply, LocaleController.getString("Reply", R.string.Reply), PendingIntent.getBroadcast(ApplicationLoader.applicationContext, 2, replyIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+                    }
+                }
+                showExtraNotifications(mBuilder, notifyAboutLast);
+                notificationManager.notify(1, mBuilder.build());
             }
-            showExtraNotifications(mBuilder, notifyAboutLast);
-            notificationManager.notify(1, mBuilder.build());
+
+
 
             scheduleNotificationRepeat();
         } catch (Exception e) {
@@ -2108,49 +2118,51 @@ public class NotificationsController {
             summaryExtender.setDismissalId("summary_"+dismissalID);
             notificationBuilder.extend(summaryExtender);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(ApplicationLoader.applicationContext)
-                    .setContentTitle(name)
-                    .setSmallIcon(R.drawable.notification)
-                    .setGroup("messages")
-                    .setContentText(text.toString())
-                    .setAutoCancel(true)
-                    .setNumber(messageObjects.size())
-                    .setColor(0xff2ca5e0)
-                    .setGroupSummary(false)
-                    .setWhen(((long) messageObjects.get(0).messageOwner.date) * 1000)
-                    .setStyle(messagingStyle)
-                    .setContentIntent(contentIntent)
-                    .extend(wearableExtender)
-                    .extend(new NotificationCompat.CarExtender().setUnreadConversation(unreadConvBuilder.build()))
-                    .setCategory(NotificationCompat.CATEGORY_MESSAGE);
-            if (photoPath != null) {
-                BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(photoPath, null, "50_50");
-                if (img != null) {
-                    builder.setLargeIcon(img.getBitmap());
-                } else {
-                    try {
-                        File file = FileLoader.getPathToAttach(photoPath, true);
-                        if (file.exists()) {
-                            float scaleFactor = 160.0f / AndroidUtilities.dp(50);
-                            BitmapFactory.Options options = new BitmapFactory.Options();
-                            options.inSampleSize = scaleFactor < 1 ? 1 : (int) scaleFactor;
-                            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-                            if (bitmap != null) {
-                                builder.setLargeIcon(bitmap);
+            if (!RePlugin.isHostInitialized()){
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(ApplicationLoader.applicationContext)
+                        .setContentTitle(name)
+                        .setSmallIcon(R.drawable.notification)
+                        .setGroup("messages")
+                        .setContentText(text.toString())
+                        .setAutoCancel(true)
+                        .setNumber(messageObjects.size())
+                        .setColor(0xff2ca5e0)
+                        .setGroupSummary(false)
+                        .setWhen(((long) messageObjects.get(0).messageOwner.date) * 1000)
+                        .setStyle(messagingStyle)
+                        .setContentIntent(contentIntent)
+                        .extend(wearableExtender)
+                        .extend(new NotificationCompat.CarExtender().setUnreadConversation(unreadConvBuilder.build()))
+                        .setCategory(NotificationCompat.CATEGORY_MESSAGE);
+                if (photoPath != null) {
+                    BitmapDrawable img = ImageLoader.getInstance().getImageFromMemory(photoPath, null, "50_50");
+                    if (img != null) {
+                        builder.setLargeIcon(img.getBitmap());
+                    } else {
+                        try {
+                            File file = FileLoader.getPathToAttach(photoPath, true);
+                            if (file.exists()) {
+                                float scaleFactor = 160.0f / AndroidUtilities.dp(50);
+                                BitmapFactory.Options options = new BitmapFactory.Options();
+                                options.inSampleSize = scaleFactor < 1 ? 1 : (int) scaleFactor;
+                                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+                                if (bitmap != null) {
+                                    builder.setLargeIcon(bitmap);
+                                }
                             }
+                        } catch (Throwable e) {
+                            //ignore
                         }
-                    } catch (Throwable e) {
-                        //ignore
                     }
                 }
-            }
 
-            if (chat == null && user != null && user.phone != null && user.phone.length() > 0) {
-                builder.addPerson("tel:+" + user.phone);
-            }
+                if (chat == null && user != null && user.phone != null && user.phone.length() > 0) {
+                    builder.addPerson("tel:+" + user.phone);
+                }
 
-            notificationManager.notify(notificationId, builder.build());
-            wearNotificationsIds.put(dialog_id, notificationId);
+                notificationManager.notify(notificationId, builder.build());
+                wearNotificationsIds.put(dialog_id, notificationId);
+            }
         }
 
         for (HashMap.Entry<Long, Integer> entry : oldIdsWear.entrySet()) {
